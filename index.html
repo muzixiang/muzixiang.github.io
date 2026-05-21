@@ -372,12 +372,29 @@
                       <hr style="border: 2px solid #000000" />
                       <h2 style="font-family:Arial, Times; color:black;">
                         Publications
-                        <!-- 请记得把这里的 ID 换成你自己的 -->
                         <a style="font-size:14px;"
                           href="https://scholar.google.com/citations?user=Y397uBoAAAAJ&hl=en">[Google Scholar]</a>
-                        <span style="font-size:12px; color:gray; font-weight:normal;">(Citations updated
-                          automatically)</span>
+                        <span style="font-size:12px; color:gray; font-weight:normal;">(Citations updated via Google Scholar)</span>
                       </h2>
+
+                      <!-- Stats Summary -->
+                      <div id="pub-stats" style="margin: 15px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; display: flex; gap: 30px; flex-wrap: wrap; border:1px solid #e0e0e0;">
+                        <div style="text-align:center; min-width:100px;"><span id="total-papers" style="font-size:26px; font-weight:bold; color:#2c3e50;">...</span><br><span style="font-size:13px; color:#666;">Total Papers</span></div>
+                        <div style="text-align:center; min-width:100px;"><span id="total-citations" style="font-size:26px; font-weight:bold; color:#d9534f;">...</span><br><span style="font-size:13px; color:#666;">Total Citations</span></div>
+                        <div style="text-align:center; min-width:100px;"><span id="h-index" style="font-size:26px; font-weight:bold; color:#27ae60;">...</span><br><span style="font-size:13px; color:#666;">h-index</span></div>
+                      </div>
+
+                      <!-- 2026 -->
+                      <h4 style="font-family:Arial; color:#555; border-bottom:1px solid #ddd; padding-bottom:5px;">
+                        2026
+                      </h4>
+                      <ol>
+                        <li style="font-family:Arial, Times; color:black;font-size:15px; margin-bottom: 8px;">
+                          <b>X Li</b>, Y Zhang, et al.
+                          <span class="paper-title">A Multi-Task Learning Framework for Emotion and Sentiment Analysis</span>.
+                          <span class="paper-venue">DASFAA</span>. 2026.
+                        </li>
+                      </ol>
 
                       <!-- 2025 -->
                       <h4 style="font-family:Arial; color:#555; border-bottom:1px solid #ddd; padding-bottom:5px;">
@@ -1430,13 +1447,12 @@
   <script src="js/main.js"></script>
   <script>
     /**
-     * 配置区域：期刊/会议分区映射表
-     * 这里的 Key 必须是你 HTML 中 <span class="paper-venue"> 里的文字的一部分
+     * 论文分区映射表 + 引用数显示
      */
     const VENUE_RANKINGS = {
-      // === 针对你列表中的 2025/2024 新文章补充 ===
       "IET Communications": "SCI",
       "ECML PKDD": "CCF-B",
+      "DASFAA": "CCF-B",
       "KSEM": "CCF-C",
       "ICIC": "CCF-C",
       "International Conference on Intelligent Computing": "CCF-C",
@@ -1446,107 +1462,147 @@
       "SEKE": "CCF-C",
       "CSCWD": "CCF-C",
 
-      // === 之前的经典文章 ===
       "ACM Computing Surveys": "SCI-1 / Top",
       "Information Fusion": "SCI-1",
+      "INFFUS": "SCI-1",
       "Neural Networks": "CCF-B",
+      "IEEE TAC": "SCI-1",
+      "IEEE T-ITS": "SCI-1",
+      "IEEE TAI": "SCI-1",
+      "ACM TOIS": "SCI-1",
+      "ACM TOMM": "SCI-1",
+      "ACM TOIT": "SCI-1",
+      "ACM TALLIP": "SCI",
+      "TST": "SCI",
+      "IEEE TCE": "SCI",
       "Frontiers in Neuroscience": "SCI-2",
       "Applied Intelligence": "CCF-C / SCI-2",
       "IEEE Access": "SCI-2",
       "Theoretical Computer Science": "CCF-B",
       "International Journal of Data Mining and Bioinformatics": "SCI-4",
       "BIBM": "CCF-B",
+      "IEEE BIBM": "CCF-B",
       "ECIR": "CCF-C",
+      "ECML": "CCF-B",
       "EMBC": "BioMed-Top",
       "GreenCom": "IEEE Conf",
+      "NAACL": "CCF-B",
+      "EMNLP": "CCF-B",
+      "NLPCC": "CCF-C",
+      "NeurIPS": "CCF-A",
       "AAAI": "CCF-A",
       "IJCAI": "CCF-A",
       "CVPR": "CCF-A",
-      "WWW": "CCF-A"
+      "WWW": "CCF-A",
+      "PRCV": "CCF-C",
+      "CIKM": "CCF-B"
     };
 
-    // 颜色配置
     const RANK_COLORS = {
-      "CCF-A": "#d9534f", // 红
-      "SCI-1": "#d9534f", // 红
+      "CCF-A": "#d9534f",
+      "SCI-1": "#d9534f",
       "Top": "#d9534f",
-      "CCF-B": "#f0ad4e", // 橙
-      "SCI-2": "#f0ad4e", // 橙
-      "CCF-C": "#5bc0de", // 蓝
-      "SCI": "#5bc0de",   // 蓝
-      "DEFAULT": "#777"   // 灰
+      "CCF-B": "#f0ad4e",
+      "SCI-2": "#f0ad4e",
+      "CCF-C": "#5bc0de",
+      "SCI": "#5bc0de",
+      "DEFAULT": "#777"
     };
 
-    // 工具：标准化字符串
     function normalizeText(text) {
       return text.toLowerCase().replace(/[^a-z0-9]/g, '');
     }
 
-    // 核心功能：加载数据并渲染
+    function getRankColor(rank) {
+      if (rank.includes("CCF-A") || rank.includes("SCI-1") || rank.includes("Top")) return RANK_COLORS["CCF-A"];
+      if (rank.includes("CCF-B") || rank.includes("SCI-2")) return RANK_COLORS["CCF-B"];
+      if (rank.includes("CCF-C") || rank.includes("SCI")) return RANK_COLORS["CCF-C"];
+      return RANK_COLORS.DEFAULT;
+    }
+
+    // 格式化数字（1000 -> 1,000）
+    function formatNum(n) {
+      return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
     async function renderPubStats() {
       try {
-        // 1. 处理分区/等级 (不需要联网，只要字典匹配)
         const venues = document.querySelectorAll('.paper-venue');
         venues.forEach(venueEl => {
-          // 防止重复添加
           if (venueEl.nextSibling && venueEl.nextSibling.tagName === 'B') return;
-
           const venueText = venueEl.innerText;
           let matchRank = null;
-
-          // 匹配映射表
           for (const [key, rank] of Object.entries(VENUE_RANKINGS)) {
             if (venueText.toLowerCase().includes(key.toLowerCase())) {
               matchRank = rank;
               break;
             }
           }
-
           if (matchRank) {
-            // 决定颜色
-            let color = RANK_COLORS.DEFAULT;
-            if (matchRank.includes("CCF-A") || matchRank.includes("SCI-1") || matchRank.includes("Top")) color = RANK_COLORS["CCF-A"];
-            else if (matchRank.includes("CCF-B") || matchRank.includes("SCI-2")) color = RANK_COLORS["CCF-B"];
-            else if (matchRank.includes("CCF-C") || matchRank.includes("SCI")) color = RANK_COLORS["CCF-C"];
-
+            const color = getRankColor(matchRank);
             const rankBadge = document.createElement('b');
-            rankBadge.style.cssText = `color:${color}; border:1px solid ${color}; border-radius:3px; padding:0 2px; font-size:12px; margin-left:5px; font-family:Arial; vertical-align: middle;`;
+            rankBadge.style.cssText = `color:${color}; border:1px solid ${color}; border-radius:4px; padding:1px 5px; font-size:11px; margin-left:5px; font-weight:bold; font-family:Arial; vertical-align:middle; white-space:nowrap;`;
             rankBadge.innerText = `[${matchRank}]`;
-
-            // 插入到 Venue 后面
             venueEl.after(rankBadge);
           }
         });
 
-        // 2. 处理引用数 (需要 citations.json 文件存在)
+        // 加载引用数据
         const response = await fetch('citations.json');
-        if (!response.ok) throw new Error("JSON not found");
+        if (!response.ok) throw new Error("citations.json not found");
 
         const citationMap = await response.json();
         const titles = document.querySelectorAll('.paper-title');
+        let totalCitations = 0;
+        let citationCounts = [];
 
         titles.forEach(titleEl => {
           const rawTitle = titleEl.innerText;
           const key = normalizeText(rawTitle);
+          const data = citationMap[key];
 
-          if (citationMap[key] && citationMap[key].count > 0) {
-            // 防止重复添加
+          if (data && data.count > 0) {
+            totalCitations += data.count;
+            citationCounts.push(data.count);
+
             const parent = titleEl.parentNode;
-            if (parent.innerHTML.includes("Cited:")) return;
+            if (parent.innerHTML.includes("cite-badge")) return;
 
-            const data = citationMap[key];
+            // 根据引用数决定 badge 颜色
+            let badgeColor = "#777";
+            let bgColor = "#f5f5f5";
+            if (data.count >= 500) { badgeColor = "#d9534f"; bgColor = "#fdf0ef"; }
+            else if (data.count >= 100) { badgeColor = "#f0ad4e"; bgColor = "#fef8f0"; }
+            else if (data.count >= 10) { badgeColor = "#5bc0de"; bgColor = "#f0f9fc"; }
+            else { badgeColor = "#999"; bgColor = "#f9f9f9"; }
+
             const citeSpan = document.createElement('span');
-            citeSpan.innerHTML = ` <a href="${data.url}" target="_blank" style="font-size:13px; color:#428bca; text-decoration:none; margin-left:5px;">[Cited: ${data.count}]</a>`;
+            citeSpan.innerHTML = ` <span class="cite-badge" style="display:inline-block; background:${bgColor}; color:${badgeColor}; border:1px solid ${badgeColor}; border-radius:10px; padding:0 8px; font-size:12px; font-weight:bold; margin-left:4px; cursor:pointer;" title="Citation count from Google Scholar">${formatNum(data.count)}</span>`;
             parent.appendChild(citeSpan);
           }
         });
 
+        // 更新统计
+        document.getElementById('total-papers').textContent = titles.length;
+        document.getElementById('total-citations').textContent = formatNum(totalCitations);
+
+        // 计算 h-index
+        citationCounts.sort((a, b) => b - a);
+        let hIndex = 0;
+        for (let i = 0; i < citationCounts.length; i++) {
+          if (citationCounts[i] >= i + 1) hIndex = i + 1;
+          else break;
+        }
+        document.getElementById('h-index').textContent = hIndex;
+
       } catch (err) {
-        console.log("Citation data not loaded yet (run python script):", err);
+        console.log("Citation data not loaded:", err);
+        document.getElementById('total-papers').textContent = document.querySelectorAll('.paper-title').length;
+        document.getElementById('total-citations').textContent = "—";
+        document.getElementById('h-index').textContent = "—";
       }
     }
 
-    // 页面加载后执行
     document.addEventListener('DOMContentLoaded', renderPubStats);
   </script>
 </body>
